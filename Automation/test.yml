@@ -1,0 +1,15 @@
+- name: Gather info on backend servers
+  hosts: localhost
+  gather_facts: no
+  vars:
+    contents: "{{ lookup('file', '/tmp/backend-1.txt') }}"
+  tasks:
+      - name: Check Date with Shell command
+        shell:
+          'openstack server list -c Name -c Networks | grep backend-1| cut -d "=" -f2 | cut -d ";" -f1 > /tmp/backend-1.txt'
+        
+      - shell:
+          'cat /tmp/backend-1.txt'  
+        register: displaylist
+      
+      - debug: msg="the value of foo.txt is {{ contents }}"

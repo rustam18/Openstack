@@ -1,0 +1,50 @@
+https://medium.com/@nuriel_25979/virtual-ip-with-openstack-neutron-dd9378a48bdf
+
+https://www.pentestpartners.com/security-blog/how-to-use-keepalived-for-high-availability-and-load-balancing/
+  --allowed-address-pairs \
+  type=dict \
+  list=true \
+  ip_address=192.168.0.3
+  
+ neutron port-list (get the id for VM ports) 
+ neutron port-update 8213e05d-25f5-4d75-8335-ab8e115b218b \
+ --allowed-address-pairs \
+ type=dict \
+ list=true \
+ ip_address=192.168.0.3
+ 
+   
+ neutron port-update 95d041e8-1960-48f7-a1f4-c565bfbc2a03 \
+  --allowed-address-pairs \
+ type=dict \
+ list=true \
+ ip_address=192.168.0.3
+ 
+ 
+ echo "vrrp_instance vrrp_group_1 {
+     state MASTER
+     interface ens3
+     virtual_router_id 1
+     priority 100
+     authentication {
+         auth_type PASS
+         auth_pass password
+     }
+     virtual_ipaddress {
+         192.168.0.3/24 brd 192.168.0.255 dev ens3
+     }
+}" > /etc/keepalived/keepalived.conf
+
+echo "vrrp_instance vrrp_group_1 {
+     state BACKUP
+     interface ens3
+     virtual_router_id 1
+     priority 50
+     authentication {
+         auth_type PASS
+         auth_pass password
+     }
+     virtual_ipaddress {
+         192.168.0.3/24 brd 192.168.0.255 dev ens3
+     }
+}" > /etc/keepalived/keepalived.conf

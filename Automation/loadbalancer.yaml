@@ -1,0 +1,150 @@
+# Create loadbalancer instances
+- name: Launch compute instance for load balancer 1
+  hosts: localhost
+  gather_facts: no
+  #vars:
+  #  contents: "{{ lookup('file', '/tmp/backend-1.txt') }}"
+  tasks:
+    #- name: Get the IP of webserver
+    #  shell:
+    #    'openstack server list -c Name -c Networks | grep backend-1| cut -d "=" -f2 | cut -d ";" -f1 > /tmp/backend-1.txt'
+
+    - name: Launch first load balancer instance
+      openstack.cloud.server:
+        state: present
+        auth:
+          auth_url: http://sdncloud91cn.netcracker.com:5000/v3/
+          username: ruku
+          password: wiiVee5rei
+          project_name: ruku-project
+        name: loadbalancer-1
+        #region_name: region-b.geo-1
+        availability_zone: nova-1
+        image: ubuntu_18.04_w_root
+        flavor: m1.medium
+        nics: 
+          - port-name: LB1-net-port
+          - net-name: int-net
+        key_name: backend-1
+        timeout: 200
+        security_groups: default
+        auto_floating_ip: false
+        #floating_ips:
+        #  - 10.101.205.124
+        userdata: |
+          {%- raw -%}#!/bin/bash
+          # Bring up the second interface
+          sudo bash -c 'echo "        ens4:
+                     dhcp4: yes
+                     dhcp4-overrides:
+                       use-routes: false" >> /etc/netplan/50-cloud-init.yaml'
+          sudo netplan apply
+          # Update repo list
+          sudo touch /etc/apt/sources.list.d/nc_bionic.list
+          sudo bash -c "echo 'deb http://yumsrv03cn.netcracker.com/deb/ubuntu/ bionic main restricted
+          deb http://yumsrv03cn.netcracker.com/deb/ubuntu/ bionic-updates main restricted
+          deb http://yumsrv03cn.netcracker.com/deb/ubuntu/ bionic universe
+          deb http://yumsrv03cn.netcracker.com/deb/ubuntu/ bionic-updates universe
+          deb http://yumsrv03cn.netcracker.com/deb/ubuntu/ bionic multiverse
+          deb http://yumsrv03cn.netcracker.com/deb/ubuntu/ bionic-updates multiverse
+          deb http://yumsrv03cn.netcracker.com/deb/ubuntu/ bionic-backports main restricted universe multiverse' >> /etc/apt/sources.list.d/nc_bionic.list"
+          sudo apt update -y
+          # Install keepalived and haproxy
+          sudo apt install keepalived haproxy -y && sudo systemctl enable keepalived haproxy
+
+          sudo bash -c 'echo "frontend haproxy-main
+              bind *:80
+              option forwardfor
+              default_backend apache_webservers
+
+          backend apache_webservers
+              balance roundrobin
+              server websvr1      192.168.2.8:80 check
+              server websvr2      192.168.2.9:80 check"' > /etc/haproxy/haproxy.cfg
+          sudo systemctl restart haproxy
+
+          # Copy the configuration file for keepalived
+          sudo bash -c 'echo "vrrp_instance vrrp_group_1 {
+            state BACKUP
+            interface ens3
+            virtual_router_id 1
+            priority 100
+            authentication {
+                auth_type PASS
+                auth_pass password
+            }
+            virtual_ipaddress {
+                10.2.2.7/24 brd 10.2.2.255 dev ens3
+            }
+          }"' > /etc/keepalived/keepalived.conf
+
+          sudo systemctl restart keepalived
+          {% endraw %}
+
+    - name: Launch second load balancer instance
+      openstack.cloud.server:
+        state: present
+        auth:
+          auth_url: http://sdncloud91cn.netcracker.com:5000/v3/
+          username: ruku
+          password: wiiVee5rei
+          project_name: ruku-project
+        name: loadbalancer-2
+        #region_name: region-b.geo-1
+        availability_zone: nova-2
+        image: ubuntu_18.04_w_root
+        flavor: m1.medium
+        nics: 
+          - port-name: LB2-net-port
+          - net-name: int-net
+        key_name: backend-1
+        timeout: 200
+        security_groups: default
+        auto_floating_ip: false
+        userdata: |
+          {%- raw -%}#!/bin/bash
+          # Bring up the second interface
+          sudo bash -c 'echo "        ens4:
+                     dhcp4: yes
+                     dhcp4-overrides:
+                       use-routes: false" >> /etc/netplan/50-cloud-init.yaml'
+          sudo netplan apply
+          # Update repo list
+          sudo touch /etc/apt/sources.list.d/nc_bionic.list
+          sudo bash -c "echo 'deb http://yumsrv03cn.netcracker.com/deb/ubuntu/ bionic main restricted
+          deb http://yumsrv03cn.netcracker.com/deb/ubuntu/ bionic-updates main restricted
+          deb http://yumsrv03cn.netcracker.com/deb/ubuntu/ bionic universe
+          deb http://yumsrv03cn.netcracker.com/deb/ubuntu/ bionic-updates universe
+          deb http://yumsrv03cn.netcracker.com/deb/ubuntu/ bionic multiverse
+          deb http://yumsrv03cn.netcracker.com/deb/ubuntu/ bionic-updates multiverse
+          deb http://yumsrv03cn.netcracker.com/deb/ubuntu/ bionic-backports main restricted universe multiverse' >> /etc/apt/sources.list.d/nc_bionic.list"
+          sudo apt update -y
+          # Install keepalived and haproxy
+          sudo apt install keepalived haproxy -y && sudo systemctl enable keepalived haproxy
+          sudo bash -c 'echo "frontend haproxy-main
+              bind *:80
+              option forwardfor
+              default_backend apache_webservers
+
+          backend apache_webservers
+              balance roundrobin
+              server websvr1      192.168.2.8:80 check
+              server websvr2      192.168.2.9:80 check"' > /etc/haproxy/haproxy.cfg
+          sudo systemctl restart haproxy
+          
+          # Copy the configuration file for keepalived
+          sudo bash -c 'echo "vrrp_instance vrrp_group_1 {
+            state BACKUP
+            interface ens3
+            virtual_router_id 1
+            priority 100
+            authentication {
+                auth_type PASS
+                auth_pass password
+            }
+            virtual_ipaddress {
+                10.2.2.7/24 brd 10.2.2.255 dev ens3
+            }
+          }"' > /etc/keepalived/keepalived.conf
+          sudo systemctl restart keepalived
+          {% endraw %}

@@ -1,0 +1,101 @@
+# Create an externally accessible network named 'ext_network'.
+- name: Create the required networks
+  hosts: localhost
+  gather_facts: no
+  tasks:
+    - name: create network management
+      openstack.cloud.network:
+        #project: ruku-project
+        state: present
+        name: mgmt
+        external: false
+    - openstack.cloud.subnet:
+        state: present
+        network_name: mgmt
+        name: mgmt-subnet
+        cidr: 10.2.0.0/24
+
+    - name: create network int-net
+      openstack.cloud.network:
+        #project: ruku-project
+        state: present
+        name: int-net
+        external: false
+    - openstack.cloud.subnet:
+        state: present
+        network_name: int-net
+        name: int-net-subnet
+        cidr: 192.168.2.0/24
+
+    - name: create network net
+      openstack.cloud.network:
+        #project: ruku-project
+        state: present
+        name: net
+        external: false
+    - openstack.cloud.subnet:
+        state: present
+        network_name: net
+        name: net-subnet
+        cidr: 10.2.2.0/24
+
+# Create router with two internal subnet interface
+    - name: Create router for external connectivity
+      openstack.cloud.router:
+        #cloud: mycloud
+        state: present
+        name: router1
+        network: ext-net
+        interfaces:
+          - mgmt-subnet
+          - net-subnet
+
+# Create a Virtual IP
+    - name: Create Virtual IP for VRRP
+      openstack.cloud.port:
+        state: present
+        auth:
+          auth_url: http://sdncloud91cn.netcracker.com:5000/v3/
+          username: ruku
+          password: wiiVee5rei
+          project_name: ruku-project
+        name: Virtual-IP
+        network: net
+        fixed_ips:
+          - ip_address: 10.2.2.7  
+
+    - name: Create interface on NET network for LB1 server
+      openstack.cloud.port:      
+        name: LB1-net-port
+        state: present
+        network: net
+        fixed_ips:
+          - ip_address: 10.2.2.8
+        allowed_address_pairs: 
+          - ip_address: 10.2.2.7 
+
+    - name: Create interface on NET network for LB2 server
+      openstack.cloud.port:      
+        name: LB2-net-port
+        state: present
+        network: net
+        fixed_ips:
+          - ip_address: 10.2.2.9
+        allowed_address_pairs: 
+          - ip_address: 10.2.2.7
+    
+    - name: Create interface on int-net network for backend-1 web server
+      openstack.cloud.port:      
+        name: int-net-port1
+        state: present
+        network: int-net
+        fixed_ips:
+          - ip_address: 192.168.2.8
+  
+    - name: Create interface on int-net network for backend-2 web server
+      openstack.cloud.port:      
+        name: int-net-port2
+        state: present
+        network: int-net
+        fixed_ips:
+          - ip_address: 192.168.2.9

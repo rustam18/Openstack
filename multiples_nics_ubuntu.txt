@@ -1,0 +1,57 @@
+        ens4:
+            dhcp4: false
+			addresses:
+			- 192.168.1.8/24
+			routes:
+			- to: 0.0.0.0
+			  via: 192.168.1.1
+            set-name: ens4
+			
+		eth0:
+          addresses:
+            - 10.10.10.2/24
+          routes:
+            - to: default
+              via: 10.10.10.1	
+			
+https://kindlund.wordpress.com/2007/11/19/configuring-multiple-default-routes-in-linux/
+https://kb.bluvalt.com/howto/create-multiple-default-route-linux/
+network:
+    version: 2
+    ethernets:
+        ens3:
+            dhcp4: true
+            match:
+                macaddress: fa:16:3e:74:48:9b
+            set-name: ens3
+			
+		ens4:
+            Dhcp4: no
+            Addresses: 192.168.1.8/24
+            Gateway: 192.168.1.1
+			match:
+                macaddress: fa:16:3e:eb:ec:43
+            set-name: ens4
+			
+# workign solution
+        ens4:
+          dhcp4: yes
+          dhcp4-overrides:
+            use-routes: false
+			
+# to make internet reachable from both interfaces			
+        ens4:
+            dhcp4: no
+            addresses:
+              - 192.168.0.18/24
+            gateway4: 192.168.0.1
+            routes:
+              - to: 0.0.0.0/0
+                via: 192.168.0.1
+                metric: 100
+                table: 101
+            routing-policy:
+              - from: 192.168.0.0/24
+                table: 101
+				
+				

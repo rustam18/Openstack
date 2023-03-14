@@ -1,0 +1,159 @@
+# Create a new instance
+- name: Launch a compute instance for apache web server1
+  hosts: localhost
+  gather_facts: no
+  tasks:
+    - name: Launch first web server instance
+      openstack.cloud.server:
+        state: present
+        auth:
+          auth_url: http://sdncloud91cn.netcracker.com:5000/v3/
+          username: ruku
+          password: wiiVee5rei
+          project_name: ruku-project
+        name: backend-1
+        #region_name: region-b.geo-1
+        availability_zone: nova-1
+        image: ubuntu_18.04_w_root
+        flavor: m1.medium
+        #network: int-net
+        nics: 
+          - net-name: mgmt
+          - port-name: int-net-port1
+        key_name: backend-1
+        timeout: 200
+        security_groups: default
+        auto_floating_ip: false
+        #floating_ips:
+        #  - 10.101.205.107
+        userdata: |
+          {%- raw -%}#!/bin/bash
+          # Bring up the second interface
+          sudo bash -c 'echo "        ens4:
+                     dhcp4: no
+                     addresses: [192.168.2.8/24]" >> /etc/netplan/50-cloud-init.yaml'
+          sudo netplan apply
+          # Update repo list
+          sudo touch /etc/apt/sources.list.d/nc_bionic.list
+          sudo bash -c "echo 'deb http://yumsrv03cn.netcracker.com/deb/ubuntu/ bionic main restricted
+          deb http://yumsrv03cn.netcracker.com/deb/ubuntu/ bionic-updates main restricted
+          deb http://yumsrv03cn.netcracker.com/deb/ubuntu/ bionic universe
+          deb http://yumsrv03cn.netcracker.com/deb/ubuntu/ bionic-updates universe
+          deb http://yumsrv03cn.netcracker.com/deb/ubuntu/ bionic multiverse
+          deb http://yumsrv03cn.netcracker.com/deb/ubuntu/ bionic-updates multiverse
+          deb http://yumsrv03cn.netcracker.com/deb/ubuntu/ bionic-backports main restricted universe multiverse' >> /etc/apt/sources.list.d/nc_bionic.list"
+          sudo apt update -y
+          # Install and update apache2
+          sudo apt install apache2 -y && sudo systemctl enable apache2
+          #sudo touch /var/www/html/index.html
+          sudo bash -c 'echo "<!DOCTYPE html>
+          <html lang="en">
+            <head>
+              <meta charset="UTF-8">
+              <meta name="viewport" content="width=device-width, initial-scale=1.0">
+              <meta http-equiv="X-UA-Compatible" content="ie=edge">
+              <title>Apache webserver node-1</title>
+              <link rel="stylesheet" href="./style.css">
+              <link rel="icon" href="./favicon.ico" type="image/x-icon">
+              <style>
+                h1 {
+                text-align: center;
+                }
+
+                h2 {
+                text-align: center;
+                }
+
+                h3 {
+                text-align: center;
+                }
+              </style>
+            </head>
+            <body>
+              <main>
+                  <h1 style="color:#515A5A">Apache2 web server node-1</h1>
+              <h2 style="color:#E74C3C">Hello from backend-1 web server !!!</h2>
+              <h3 style="color:#E74C3C">Hello from backend-1 web server !!!</h3>
+              </main>
+                  <script src="index.js"></script>
+            </body>
+          </html>" > /var/www/html/index.html'
+          sudo systemctl restart apache2      
+          {% endraw %}
+
+
+    - name: Launch second web server instance
+      openstack.cloud.server:
+        state: present
+        auth:
+          auth_url: http://sdncloud91cn.netcracker.com:5000/v3/
+          username: ruku
+          password: wiiVee5rei
+          project_name: ruku-project
+        name: backend-2
+        #region_name: region-b.geo-1
+        availability_zone: nova-2
+        image: ubuntu_18.04_w_root
+        flavor: m1.medium
+        #network: int-net
+        nics: 
+          - net-name: mgmt
+          - port-name: int-net-port2
+        key_name: backend-1
+        timeout: 200
+        security_groups: default
+        auto_floating_ip: false
+        userdata: |
+          {%- raw -%}#!/bin/bash
+          # Bring up the second interface
+          sudo bash -c 'echo "        ens4:
+                     dhcp4: no
+                     addresses: [192.168.2.9/24]" >> /etc/netplan/50-cloud-init.yaml'
+          sudo netplan apply
+          # Update repo list
+          sudo touch /etc/apt/sources.list.d/nc_bionic.list
+          sudo bash -c "echo 'deb http://yumsrv03cn.netcracker.com/deb/ubuntu/ bionic main restricted
+          deb http://yumsrv03cn.netcracker.com/deb/ubuntu/ bionic-updates main restricted
+          deb http://yumsrv03cn.netcracker.com/deb/ubuntu/ bionic universe
+          deb http://yumsrv03cn.netcracker.com/deb/ubuntu/ bionic-updates universe
+          deb http://yumsrv03cn.netcracker.com/deb/ubuntu/ bionic multiverse
+          deb http://yumsrv03cn.netcracker.com/deb/ubuntu/ bionic-updates multiverse
+          deb http://yumsrv03cn.netcracker.com/deb/ubuntu/ bionic-backports main restricted universe multiverse' >> /etc/apt/sources.list.d/nc_bionic.list"
+          sudo apt update -y
+          # Install and update apache2
+          sudo apt install apache2 -y && sudo systemctl enable apache2
+          #sudo touch /var/www/html/index.html
+          sudo bash -c 'echo "<!DOCTYPE html>
+          <html lang="en">
+            <head>
+              <meta charset="UTF-8">
+              <meta name="viewport" content="width=device-width, initial-scale=1.0">
+              <meta http-equiv="X-UA-Compatible" content="ie=edge">
+              <title>Apache webserver node-1</title>
+              <link rel="stylesheet" href="./style.css">
+              <link rel="icon" href="./favicon.ico" type="image/x-icon">
+              <style>
+                h1 {
+                text-align: center;
+                }
+
+                h2 {
+                text-align: center;
+                }
+
+                h3 {
+                text-align: center;
+                }
+              </style>
+            </head>
+            <body>
+              <main>
+                  <h1 style="color:#515A5A">Apache2 web server node-1</h1>
+              <h2 style="color:#27AE60">Hello from backend-2 web server !!!</h2>
+              <h3 style="color:#27AE60">Hello from backend-2 web server !!!</h3>
+              </main>
+                  <script src="index.js"></script>
+            </body>
+          </html>" > /var/www/html/index.html'
+          sudo systemctl restart apache2      
+          {% endraw %}

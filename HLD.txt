@@ -1,0 +1,21 @@
+Create Networks:
+int-net	
+int-net-subnet 192.168.0.0/24
+
+net	
+net-subnet 10.1.0.0/24
+
+mgmt	
+mgmt-subnet 10.0.0.0/24
+
+Create Router:
+Attach two interfaces for net and mgmt networks
+
+
+Create Servers from snapshots:
+Primary interface for backend is mgmt
+Primary interface for loadbalancer is net
+Secondary interface for backend is int-net
+Secondary interface for loadbalancer is int-net
+
+Attach secondary interfaces with backend and loadbalancer servers

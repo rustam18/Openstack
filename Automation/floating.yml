@@ -1,0 +1,15 @@
+# Create an externally accessible network named 'ext_network'.
+- name: Create the required networks
+  hosts: localhost
+  gather_facts: no
+  tasks:
+# Attach a floating ip with the Virtual-IP
+    - openstack.cloud.floating_ip:
+        #cloud: dguerri
+        state: present
+        reuse: yes
+        #server: 4bd02cce-4e9c-4891-9708-bd648fa2cd28
+        network: ext_net
+        fixed_address: 10.2.2.7
+        wait: true
+        timeout: 180

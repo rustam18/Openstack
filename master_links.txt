@@ -1,0 +1,57 @@
+Loadbalancer:
+https://openmetal.io/docs/manuals/tutorials/lb-with-octavia
+https://docs.openstack.org/octavia/latest/user/guides/basic-cookbook.html
+https://cloudinfrastructureservices.co.uk/nginx-load-balancing/
+##
+https://docs.catalystcloud.nz/tutorials/compute/deploying-highly-available-instances-with-keepalived.html
+https://www.cloudvps.com/knowledgebase/entry/2825-how-configure-your-vrrp-openstack/
+
+
+
+Apache web server:
+https://www.digitalocean.com/community/tutorials/how-to-install-the-apache-web-server-on-ubuntu-20-04
+https://www.cherryservers.com/blog/how-to-install-and-configure-apache-web-server-on-ubuntu-20-04
+https://askubuntu.com/questions/746994/make-my-apache2-server-public
+
+Networking:
+https://www.unixmen.com/setup-openstack-instances-virtual-machines-with-external-connectivity-using-horizon-dashboard/
+https://medium.com/@nuriel_25979/virtual-ip-with-openstack-neutron-dd9378a48bdf
+
+
+Port down issue:
+https://bugs.launchpad.net/neutron/+bug/1968859
+
+https://docs.openstack.org/image-guide/obtain-images.html
+
+
+sudo mkdir /var/www/rustam21352.nc
+sudo chown -R $USER:$USER /var/www/rustam21352.nc
+sudo chmod -R 755 /var/www/rustam21352.nc
+sudo vi /var/www/rustam21352.nc/index.html
+
+<html>
+    <head>
+        <title>Welcome to rustam21352.nc!</title>
+    </head>
+    <body>
+        <h1>Success!  The rustam21352.nc virtual host is working!</h1>
+    </body>
+</html>
+
+sudo vi /etc/apache2/sites-available/rustam21352.nc.conf
+
+
+<VirtualHost *:80>
+    ServerAdmin webmaster@localhost
+    ServerName rustam21352.nc
+    ServerAlias www.rustam21352.nc
+    DocumentRoot /var/www/rustam21352.nc
+    ErrorLog ${APACHE_LOG_DIR}/error.log
+    CustomLog ${APACHE_LOG_DIR}/access.log combined
+</VirtualHost>
+
+sudo a2ensite rustam21352.nc.conf
+sudo a2dissite 000-default.conf
+sudo apache2ctl configtest
+sudo systemctl restart apache2
+
