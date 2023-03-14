@@ -1,15 +1,15 @@
 # Create an externally accessible network named 'ext_network'.
-- name: Create the required networks
+- name: Attach the floating ip with virtual IP
   hosts: localhost
   gather_facts: no
   tasks:
-# Attach a floating ip with the Virtual-IP
-    - openstack.cloud.floating_ip:
-        #cloud: dguerri
-        state: present
-        reuse: yes
-        #server: 4bd02cce-4e9c-4891-9708-bd648fa2cd28
-        network: ext_net
-        fixed_address: 10.2.2.7
-        wait: true
-        timeout: 180
+    - shell:
+          #'openstack floating ip create --port Virtual-IP ext-net'
+          'openstack server list'
+    - name: Pause for 5 minutes to build app cache
+      ansible.builtin.pause:
+        minutes: 1
+    - shell:
+          'openstack floating ip list -f csv -c "Floating IP Address"| grep "[0-9]"'
+      register: hello
+    - debug: msg='The Apache2 web server is available at {{ hello.stdout }}'

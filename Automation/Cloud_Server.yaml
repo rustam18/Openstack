@@ -3,41 +3,44 @@
   hosts: localhost
   gather_facts: no
   tasks:
-    - name: create network management
-      openstack.cloud.network:
-        #project: ruku-project
-        state: present
-        name: mgmt
-        external: false
-    - openstack.cloud.subnet:
-        state: present
-        network_name: mgmt
-        name: mgmt-subnet
-        cidr: 10.2.0.0/24
-
-    - name: create network int-net
-      openstack.cloud.network:
-        #project: ruku-project
-        state: present
-        name: int-net
-        external: false
-    - openstack.cloud.subnet:
-        state: present
-        network_name: int-net
-        name: int-net-subnet
-        cidr: 192.168.2.0/24
-
-    - name: create network net
+    - name: create the net network
       openstack.cloud.network:
         #project: ruku-project
         state: present
         name: net
         external: false
-    - openstack.cloud.subnet:
+    - name: create the subnet for net network 
+      openstack.cloud.subnet:
         state: present
         network_name: net
         name: net-subnet
         cidr: 10.2.2.0/24
+
+    - name: create the int-net network
+      openstack.cloud.network:
+        #project: ruku-project
+        state: present
+        name: int-net
+        external: false
+    - name: create the subnet for int-net network 
+      openstack.cloud.subnet:
+        state: present
+        network_name: int-net
+        name: int-net-subnet
+        cidr: 192.168.2.0/24
+        
+    - name: create the management network 
+      openstack.cloud.network:
+        #project: ruku-project
+        state: present
+        name: mgmt
+        external: false
+    - name: create the subnet for management network
+      openstack.cloud.subnet:
+        state: present
+        network_name: mgmt
+        name: mgmt-subnet
+        cidr: 10.2.0.0/24
 
 # Create router with two internal subnet interface
     - name: Create router for external connectivity
@@ -121,9 +124,9 @@
         key_name: backend-1
         timeout: 200
         security_groups: default
-        #auto_floating_ip: false
-        floating_ips:
-          - 10.101.205.138
+        auto_floating_ip: false
+        #floating_ips:
+        #  - 10.101.205.138
         userdata: |
           {%- raw -%}#!/bin/bash
           # Bring up the second interface
@@ -178,7 +181,6 @@
           </html>" > /var/www/html/index.html'
           sudo systemctl restart apache2      
           {% endraw %}
-
 
     - name: Launch second web server instance
       openstack.cloud.server:
@@ -327,6 +329,7 @@
           }"' > /etc/keepalived/keepalived.conf
 
           sudo systemctl restart keepalived
+          sleep 30
           {% endraw %}
 
     - name: Launch second load balancer instance
@@ -379,7 +382,6 @@
               server websvr1      192.168.2.8:80 check
               server websvr2      192.168.2.9:80 check"' > /etc/haproxy/haproxy.cfg
           sudo systemctl restart haproxy
-          
           # Copy the configuration file for keepalived
           sudo bash -c 'echo "vrrp_instance vrrp_group_1 {
             state BACKUP
@@ -395,4 +397,15 @@
             }
           }"' > /etc/keepalived/keepalived.conf
           sudo systemctl restart keepalived
+          sleep 30
           {% endraw %}
+    
+    - name: Attach Virtual IP with Floating IP
+      shell:
+          'openstack floating ip create --port Virtual-IP ext-net'
+
+    - name: Extract the Floating IP
+      shell:
+          'openstack floating ip list -f csv -c "Floating IP Address"| grep "[0-9]"'
+      register: Floating
+    - debug: msg='The Apache2 web server is available at {{ Floating.stdout }}'
